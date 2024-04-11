@@ -80,7 +80,7 @@ def bbox_overlaps(boxes, query_boxes):
     return out_fn(overlaps)
 
 
-def delete_all(demo_path, fmt='png'):
+def delete_all(demo_path, fmt='jpg'):
     import glob
     filelist = glob.glob(os.path.join(demo_path, '*.' + fmt))
     if len(filelist) > 0:

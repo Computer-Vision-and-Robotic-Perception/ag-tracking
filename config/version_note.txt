@@ -1,0 +1,4 @@
+tracker_orig - Original tracktor from paper implementation
+tracker_clean - Cleaned up version of original tracktor. It does not contain reID nor motion model implementations
+tracktor_ag - It is based on the original tracktor with the reID module. The reId is modified such that all tracks are kept in memory
+tracktor_agt_clean - Our implementation with the spatial re-identification module.

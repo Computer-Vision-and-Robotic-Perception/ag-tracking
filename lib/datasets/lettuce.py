@@ -43,7 +43,7 @@ class Lettuce(Dataset):
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         iscrowd = torch.zeros(self.anchors, dtype=torch.int64)
         target = {'img': img, 'boxes': boxes, 'ids': ids, 'labels': labels, 
-                  'image_id':image_id, 'area': area, 'iscrowd': iscrowd}
+                  'image_id': image_id, 'area': area, 'iscrowd': iscrowd}
 
         if self.transforms is not None:
             imgPIL, target = self.transforms(imgPIL, target)

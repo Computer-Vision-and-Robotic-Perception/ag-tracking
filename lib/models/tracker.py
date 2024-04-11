@@ -96,7 +96,7 @@ def track(cfg, loader, name):
     times = np.array(times[2:])
     plt.plot(times)
     plt.title("%3.4f, %3.4f, %3.4f" % (times.min(), times.mean(), times.max()))
-    plt.savefig(cfg['outdir'] + 'track/times/%s.png' % name)
+    plt.savefig(cfg['outdir'] + 'track/times/%s.jpg' % name)
     plt.clf()
     print('Times:', times.min(), times.mean(), times.max())
 
@@ -106,6 +106,7 @@ def slam(cfg, loader, name):
     clean_path(cfg['outdir'] + 'slam/times')
     agt_cfg = cfg_agt.get_config()
     slam = SLAM(cfg, agt_cfg.REDUCTION_FACTOR, agt_cfg.RANSAC_THRES)
+    cam_pos = []
     with torch.no_grad():
         t0, t1 = time.time(), time.time()
         times = []
@@ -117,10 +118,11 @@ def slam(cfg, loader, name):
             if i == 0:
                 im0 = img
                 tmix, tmiy, tmax, tmay = 0, 0, img.shape[1], img.shape[0]
-            if i == 2000: break
+            if i == 301: break # straight4:7:301, B&F1:0:361, O&I2:3:851
             h, w = imgT.shape[-2], imgT.shape[-1]
             slam.run_frame(imgT, h, w, i)            
             H0 = slam.H
+            if i%10 == 0: cam_pos.append((H0 @ np.array([[img.shape[1]/2, img.shape[0]/2, 1]]).T).flatten()[:2])
             # Rendering for validation purposes
             corners = np.array([[0, w, 0, w],[0, 0, h, h],[1, 1, 1, 1]])
             warpcorners = H0 @ corners
@@ -134,20 +136,99 @@ def slam(cfg, loader, name):
             wt, ht = cmax - cmix, cmay - cmiy
             w0, h0 = tmax - tmix, tmay - tmiy
             # warp current frame
-            frt = cv2.warpPerspective(img, Haux @ H0, (wt, ht), borderMode=cv2.BORDER_REPLICATE)
-            full = np.zeros((h0, w0, 3))
+            frt = cv2.warpPerspective(img, Haux @ H0, (wt, ht), 
+                                        borderMode=cv2.BORDER_CONSTANT, flags=cv2.INTER_NEAREST, borderValue=(1, 1, 1))
+            frt_mask = cv2.warpPerspective(np.ones_like(img), Haux @ H0, (wt, ht), 
+                                        borderMode=cv2.BORDER_CONSTANT, flags=cv2.INTER_NEAREST, borderValue=(0, 0, 0))
+            full = np.ones((h0, w0, 3))
             full[pmiy-tmiy: pmiy-tmiy + im0.shape[0], pmix-tmix: pmix-tmix + im0.shape[1]] = im0
-            frt += (frt == 0) * (full[cmiy-tmiy: cmiy-tmiy+ht, cmix-tmix:cmix-tmix+wt])
+            frt = (frt_mask == 0) * (full[cmiy-tmiy: cmiy-tmiy+ht, cmix-tmix:cmix-tmix+wt]) + (frt_mask == 1) * frt
             full[cmiy-tmiy: cmiy-tmiy+ht, cmix-tmix:cmix-tmix+wt] = frt
             im0 = full
-            cv2.imwrite(cfg['outdir'] + 'slam/render/%s/%06d.png' % (name, i), (im0 * 255).astype(np.uint8))
+            # For saving
+            imsv = (im0 * 255).astype(np.uint8)
+            hsv, wsv, _ = imsv.shape
+            imsv = cv2.resize(imsv, (wsv * 2000 // max(hsv, wsv), hsv * 2000 // max(hsv, wsv)), interpolation=cv2.INTER_CUBIC)
+            cv2.imwrite(cfg['outdir'] + 'slam/render/%s/%s_%04d.jpg' % (name, name, i), imsv)
+            # for timing
             t1 = time.time()
             times.append(t1 - t0)
             t0 = t1
             print('frame', i)
-        cv2.imwrite(cfg['outdir'] + 'slam/%s.png' % name, (im0 * 255).astype(np.uint8))
+        
+        name = name.replace('&', 'n')
+        cv2.imwrite(cfg['outdir'] + 'slam/%s.jpg' % name, imsv)
+
+        # plot paths alone (no image) using MATPLOTLIB
+        plt.figure(figsize=(6, 1.5)) # (6, 1), (6, 1.5), (6, 3)
+        x = np.array(cam_pos)[:, 0]
+        y = np.array(cam_pos)[:, 1]
+        u = np.diff(x)
+        v = np.diff(y)
+        pos_x = x[:-1] + u/2
+        pos_y = y[:-1] + v/2
+        plt.plot(y, x, 'b')
+        plt.quiver(pos_y, pos_x, v, u, color='b', pivot='mid', width=2)
+        # Fix aspect ratio
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.title("Path $\mathbf{x}_t$", fontsize=8)
+        plt.xlabel("y [pixels]", fontsize=8)
+        plt.ylabel("x [pixels]", fontsize=8)
+        # set y limits to at least [-50 550]
+        plt.ylim([min(-50, min(x)), max(550, max(x))])
+        plt.xticks(fontsize=8)
+        plt.yticks(fontsize=8)
+        # plt.tight_layout()
+        # save
+        # plt.savefig(cfg['outdir'] + 'slam/%s_path.jpg' % name, dpi=300)
+        # plt.savefig(cfg['outdir'] + 'slam/%s_path.eps' % name, dpi=300)
+                
         times = np.array(times[2:])
+        plt.figure()
         plt.plot(times)
-        plt.savefig(cfg['outdir'] + 'slam/times/%s.png' % name)
+        plt.savefig(cfg['outdir'] + 'slam/times/%s.jpg' % name)
         plt.clf()
-        print('Times:', times.min(), times.mean(), times.max())
+
+        # Draw the trajectory on imsv using OPENCV
+        imbk = imsv.copy()
+        # change the values of cam_pos to be in the range of the image
+        hsv, wsv, _ = imsv.shape
+        cam_pos = np.array(cam_pos)
+        cam_pos[:, 0] = cam_pos[:, 0] - tmix
+        cam_pos[:, 1] = cam_pos[:, 1] - tmiy
+        cam_pos[:, 0] = cam_pos[:, 0] * wsv / (tmax - tmix)
+        cam_pos[:, 1] = cam_pos[:, 1] * hsv / (tmay - tmiy)
+        cam_pos = cam_pos.astype(int)
+        for i in range(len(cam_pos) - 1):
+            cv2.arrowedLine(imsv, tuple(cam_pos[i]), tuple(cam_pos[i+1]), (0, 0, 255), thickness=4, tipLength=0.2)
+        # cv2.imwrite(cfg['outdir'] + 'slam/%s_image_path_opencv.jpg' % name, imsv)
+
+        # Draw the trajectory on imsv using MATPLOTLIB
+        # imsv = imbk.copy()
+        imsv = cv2.rotate(imsv, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        imsv = cv2.cvtColor(imsv, cv2.COLOR_BGR2RGB)
+        plt.figure(figsize=(6, 1.5))  # (6, 1), (6, 1.5), (6, 3)
+        plt.imshow(imsv)
+        # plt.plot(cam_pos[:, 1], wsv - cam_pos[:, 0], 'k', linewidth=0.8)
+        # plot arrows using quiver
+        x = cam_pos[:, 1]
+        y = wsv - cam_pos[:, 0]
+        u = np.diff(x)
+        v = np.diff(y)
+        pos_x = x[:-1] + u/2
+        pos_y = y[:-1] + v/2
+        norm = np.sqrt(u**2 + v**2)
+        # plt.quiver(pos_x, pos_y, u/norm, -v/norm, color='r', width=0.004)
+        # Fix aspect ratio
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.title("Path $\mathbf{x}_t$", fontsize=8)
+        plt.xlabel("y [pixels]", fontsize=8)
+        plt.ylabel("x [pixels]", fontsize=8)
+        plt.xticks(fontsize=8)
+        plt.yticks(fontsize=8)
+        # save
+        # plt.savefig(cfg['outdir'] + 'slam/%s_image_path_matplotlib.jpg' % name, dpi=300)
+        plt.savefig(cfg['outdir'] + 'slam/%s_image_path_matplotlib.eps' % name, dpi=300)
+        plt.clf()
+        plt.close()
+

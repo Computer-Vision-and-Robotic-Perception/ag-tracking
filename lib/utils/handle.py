@@ -9,13 +9,24 @@ def create_histograms_from_path(p, bins, range):
         arr = np.loadtxt(p + file)
         all = np.concatenate([all, arr])
         plt.hist(arr, bins, range)
-        plt.savefig(p + file[:-4] + '.png')
+        plt.savefig(p + file[:-4] + '.jpg')
         plt.clf()
     plt.hist(all, bins, range)
-    plt.savefig(p + 'all.png')
+    plt.savefig(p + 'all.jpg')
     plt.clf()
     plt.plot(all)
-    plt.savefig(p + 'plot.png')
+    plt.savefig(p + 'plot.jpg')
+
+def obtain_summary_dict(p):
+    file = open(p + '/pedestrian_summary.txt')
+    lines = file.readlines()
+    line1, line2 = lines[0], lines[1]
+    line1 = line1[:-1].split(' ')
+    line2 = line2[:-1].split(' ')
+    summary = {}
+    for i, met in enumerate(line1):
+        summary[met] = float(line2[i])
+    return summary
 
 def create_summary_from_csv(p):
     # read file
@@ -51,11 +62,12 @@ def create_summary_from_csv(p):
             pr += ' & %3.3f' % all[seq][met]  
         print(pr)
         print('-------------------------------------')
+    return all
 
 if __name__ == '__main__':
     pass
     # path = os.getcwd() + "/output/reids/"
     # create_histograms_from_path(path, 25, (0, 2.5))
 
-    path = 'TrackEval/data/results/exp15'
+    path = 'TrackEval/data/results/exp06'
     create_summary_from_csv(path)

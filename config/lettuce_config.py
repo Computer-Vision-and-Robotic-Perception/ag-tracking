@@ -11,7 +11,7 @@ sets = ['B&F1', 'B&F2', 'O&I1', 'O&I2', 'straight1', 'straight2', 'straight3', '
 keep = [7]
 sets = [seti for i, seti in enumerate(sets) if i in keep]
 
-mode = 'play' # 'play'  'train'  'eval'  'track'  'slam'
+mode = 'slam' # 'play'  'train'  'eval'  'track'  'slam'
 tracker = 'agt' # 'clean' 'orig' 'ag'  'agt'
 device = 0 #  'cpu' cuda:int
 batch_size = 16

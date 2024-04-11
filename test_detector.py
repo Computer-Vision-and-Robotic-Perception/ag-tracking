@@ -54,9 +54,9 @@ if __name__ == '__main__':
                 cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 1), 2)
                 cv2.putText(img, '%.2f' % sc, (x1, y2 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (1, 0, 0), 2)
             cv2.imshow('video', img)
-            cv2.imwrite('output/LettuceMOT/det/test/%03d.png' % i, (img * 255).astype(np.uint8))
+            cv2.imwrite('output/LettuceMOT/det/test/%03d.jpg' % i, (img * 255).astype(np.uint8))
             cv2.waitKey(1)
             if i == 1000: break
     plt.figure()
     plt.hist(confs)
-    plt.savefig('output/LettuceMOT/det/test/confs.png')
+    plt.savefig('output/LettuceMOT/det/test/confs.jpg')

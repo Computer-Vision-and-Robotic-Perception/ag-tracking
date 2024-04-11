@@ -101,7 +101,7 @@ class Tracker:
 				not_assigned = []
 				remove_inactive = []
 				for tr, dt in zip(track_ind, det_ind):
-					print(tr, dt, dist[tr, dt])
+					# print(tr, dt, dist[tr, dt])
 					t = self.inactive_tracks[tr]
 					if t.rad != None:
 						if dist[tr, dt] <= 500: # 2 * t.rad:
