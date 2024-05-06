@@ -1,6 +1,8 @@
+import os
 import cv2
 import yaml
 import time
+import tqdm
 import torch
 import kornia
 import numpy as np
@@ -8,7 +10,6 @@ import kornia.feature as KF
 from .tracktor.slam import SLAM
 import matplotlib.pyplot as plt
 from ..models.frcnn_fpn import FRCNN_FPN
-from ..utils.data_utils import clean_path
 from .tracktor.reid.resnet import resnet50
 
 # from .tracktor.tracker_clean import Tracker
@@ -37,9 +38,8 @@ def track(cfg, loader, name):
     # set the detector
     print('Detector: setting up...')
     detector = FRCNN_FPN(cfg['backbone'])
-    chkpt = cfg['det_eval_dir'] + cfg['det_eval_model']
-    print('Detector: loading checkpoint: "%s"' % chkpt)
-    detector.load_state_dict(torch.load(chkpt))
+    print('Detector: loading checkpoint: "%s"' % cfg['checkpoint'])
+    detector.load_state_dict(torch.load(cfg['checkpoint']))
     detector.to(device)
     detector.eval()
     print('Detector ready!')
@@ -63,12 +63,12 @@ def track(cfg, loader, name):
     if cfg['tracker'] == 'ag': tracker = ag.Tracker(detector, reid_network, tracker_cfg)
 
     outfile = open(cfg['outdir'] + 'track/' + name + '.txt', 'w')
-    clean_path(cfg['outdir'] + 'track/render')
-    clean_path(cfg['outdir'] + 'track/times')
+    os.makedirs((cfg['outdir'] + 'track/render'), exist_ok=True)
+    os.makedirs((cfg['outdir'] + 'track/times'), exist_ok=True)
     with torch.no_grad():
         t0, t1 = time.time(), time.time()
         times = []
-        for i, (img, target) in enumerate(loader):
+        for i, (img, target) in tqdm.tqdm(enumerate(loader)):
             imgT = img[0][None, :, :, :].to(device)
             img = target['img'][0].cpu().numpy()
             B, G, R = img[0, :, :], img[1, :, :], img[2, :, :]
@@ -91,7 +91,6 @@ def track(cfg, loader, name):
             t1 = time.time()
             times.append(t1 - t0)
             t0 = t1
-            print('frame', i)
     outfile.close()
     times = np.array(times[2:])
     plt.plot(times)
@@ -102,8 +101,8 @@ def track(cfg, loader, name):
 
 
 def slam(cfg, loader, name):
-    clean_path(cfg['outdir'] + 'slam/render/' + name)
-    clean_path(cfg['outdir'] + 'slam/times')
+    os.makedirs(cfg['outdir'] + 'slam/render/', exist_ok=True)
+    os.makedirs(cfg['outdir'] + 'slam/times', exist_ok=True)
     agt_cfg = cfg_agt.get_config()
     slam = SLAM(cfg, agt_cfg.REDUCTION_FACTOR, agt_cfg.RANSAC_THRES)
     cam_pos = []
@@ -111,7 +110,7 @@ def slam(cfg, loader, name):
         t0, t1 = time.time(), time.time()
         times = []
         tmix, tmiy, tmax, tmay = 0, 0, 0, 0
-        for i, (imgT, target) in enumerate(loader):
+        for i, (imgT, target) in tqdm.tqdm(enumerate(loader)):
             img = target['img'][0].cpu().numpy()
             B, G, R = img[0, :, :], img[1, :, :], img[2, :, :]
             img = np.stack([B, G, R], 2)
@@ -154,7 +153,6 @@ def slam(cfg, loader, name):
             t1 = time.time()
             times.append(t1 - t0)
             t0 = t1
-            print('frame', i)
         
         name = name.replace('&', 'n')
         cv2.imwrite(cfg['outdir'] + 'slam/%s.jpg' % name, imsv)
@@ -227,8 +225,7 @@ def slam(cfg, loader, name):
         plt.xticks(fontsize=8)
         plt.yticks(fontsize=8)
         # save
-        # plt.savefig(cfg['outdir'] + 'slam/%s_image_path_matplotlib.jpg' % name, dpi=300)
+        plt.savefig(cfg['outdir'] + 'slam/%s_image_path_matplotlib.jpg' % name, dpi=300)
         plt.savefig(cfg['outdir'] + 'slam/%s_image_path_matplotlib.eps' % name, dpi=300)
         plt.clf()
         plt.close()
-

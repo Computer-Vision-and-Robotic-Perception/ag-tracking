@@ -2,5 +2,9 @@ data/
 venv/
 output/
 TrackEval/
+ultralytics/
+runs/
 __pycache__/
- *.pyc
+
+*.pyc
+*.pt

@@ -69,5 +69,5 @@ if __name__ == '__main__':
     # path = os.getcwd() + "/output/reids/"
     # create_histograms_from_path(path, 25, (0, 2.5))
 
-    path = 'TrackEval/data/results/exp06'
+    path = 'TrackEval/data/results_lettuce/exp06'
     create_summary_from_csv(path)

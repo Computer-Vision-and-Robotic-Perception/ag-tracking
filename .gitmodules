@@ -1,3 +1,6 @@
 [submodule "TrackEval"]
 	path = TrackEval
 	url = https://github.com/JonathonLuiten/TrackEval.git
+[submodule "ultralytics"]
+	path = ultralytics
+	url = https://github.com/ultralytics/ultralytics.git

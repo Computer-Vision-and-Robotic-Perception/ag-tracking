@@ -3,6 +3,10 @@ import numpy as np
 def estimate_euclidean_transform(keypoints1, keypoints2):
     """
     Estimate Euclidean transformation given 2D keypoint correspondences using least squares method.
+    Euclidean X2 = R*X1 + t (3DoF)
+    Similar X2 = s*R*X1 + t (4DoF)
+    Affine X2 = A*X1 + t (6DoF)
+    Projective X2 = P*X1 (8DoF)
     Args:
         keypoints1 (ndarray): Array of shape (N, 2) representing 2D keypoints in the source image.
         keypoints2 (ndarray): Array of shape (N, 2) representing 2D keypoints in the target image.

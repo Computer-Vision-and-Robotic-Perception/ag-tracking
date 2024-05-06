@@ -1,44 +1,4 @@
-class AttrDict(dict):
-    IMMUTABLE = '__immutable__'
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__[AttrDict.IMMUTABLE] = False
-
-    def __getattr__(self, name):
-        if name in self.__dict__:
-            return self.__dict__[name]
-        elif name in self:
-            return self[name]
-        else:
-            raise AttributeError(name)
-
-    def __setattr__(self, name, value):
-        if not self.__dict__[AttrDict.IMMUTABLE]:
-            if name in self.__dict__:
-                self.__dict__[name] = value
-            else:
-                self[name] = value
-        else:
-            raise AttributeError(
-                'Attempted to set "{}" to "{}", but AttrDict is immutable'.
-                format(name, value))
-
-    def immutable(self, is_immutable):
-        """Set immutability to is_immutable and recursively apply the setting
-        to all nested AttrDicts.
-        """
-        self.__dict__[AttrDict.IMMUTABLE] = is_immutable
-        # Recursively set immutable state
-        for v in self.__dict__.values():
-            if isinstance(v, AttrDict):
-                v.immutable(is_immutable)
-        for v in self.values():
-            if isinstance(v, AttrDict):
-                v.immutable(is_immutable)
-
-    def is_immutable(self):
-        return self.__dict__[AttrDict.IMMUTABLE]
-
+from .obj_config import AttrDict
 
 def get_config():
     cfg = AttrDict()
@@ -56,7 +16,7 @@ def get_config():
     cfg.REGRESSION_NMS_THRESH = 0.6
     # motion model settings
     cfg.MOTION_MODEL = AttrDict()
-    cfg.MOTION_MODEL.ENABLED = False
+    cfg.MOTION_MODEL.ENABLED = True
     # average velocity over last n_steps steps
     cfg.MOTION_MODEL.N_STEPS = 5
     # if true, only model the movement of the bounding box center. If false, width and height are also modeled.
@@ -70,7 +30,7 @@ def get_config():
     # Threshold increment between two iterations (original 0.001) [BH: for camera alignment]
     cfg.TERMINATION_EPS = 0.00001
     # Use siamese network to do reid
-    cfg.DO_REID = False
+    cfg.DO_REID = True
     # How much timesteps dead tracks are kept and cosidered for reid
     cfg.INACTIVE_PATIENCE = 50  # frames
     # How much last appearance features are to keep

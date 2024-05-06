@@ -9,9 +9,9 @@ from ..utils.data_utils import get_mot_gt
 from ..utils.det_utils.utils import get_transform
 
 
-class Lettuce(Dataset):
-    def __init__(self, cfg, name, anchors=20):
-        self.train = cfg['mode'] == 'train'
+class AgMOT(Dataset):
+    def __init__(self, cfg, name, train=False, anchors=200):
+        self.train = train
         self.transforms = get_transform(self.train)
         self.anchors = anchors
         # Read ground-truth bounding boxes
@@ -50,7 +50,7 @@ class Lettuce(Dataset):
 
         return imgPIL, target
 
-class MergedLettuce(Lettuce):
+class MergedAgMOT(AgMOT):
     def __init__(self, dsets):
         self.train = dsets[0].train
         self.transforms = get_transform(self.train)
