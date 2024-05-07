@@ -17,8 +17,8 @@ class AgMOT(Dataset):
         # Read ground-truth bounding boxes
         self.gts = get_mot_gt(cfg['datadir'] + name + '/gt/gt.txt')
         # Image location and list
-        imgdir = cfg['datadir'] + name + '/img/'
-        self.files = sorted([imgdir + img for img in os.listdir(imgdir)])
+        self.imgdir = cfg['datadir'] + name + '/img/'
+        self.files = sorted([self.imgdir + img for img in os.listdir(self.imgdir)])
 
     def __len__(self):
         return len(self.files)

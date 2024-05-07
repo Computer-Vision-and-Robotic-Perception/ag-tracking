@@ -21,7 +21,7 @@ class UltraTrainer():
                          save_period=1,
                          device=self.cfg['device'])
 
-    def test(self):
+    def eval(self):
         warn = ""
         if self.cfg['yolo_maker'] == 'yolov8n.pt': warn = "WARNING:"
         print(warn + " Using checkpoint:", self.cfg['yolo_maker'])
@@ -34,4 +34,5 @@ class UltraTrainer():
             for i, file in enumerate(os.listdir(self.cfg['datadir'] + 'testing/images/')):
                 if i == max: break
                 if file.endswith('.jpg') or file.endswith('.png'):
-                    self.model(self.cfg['datadir'] + 'testing/images/' + file, save=True)
+                    self.model(self.cfg['datadir'] + 'testing/images/' + file, save=True, verbose=False)
+        print('Results saved to', settings('runs_dir'))

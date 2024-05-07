@@ -8,19 +8,19 @@ outdir = 'output/LettuceMOT/'
 sets = ['B&F1', 'B&F2', 'O&I1', 'O&I2', 'straight1', 'straight2', 'straight3', 'straight4']
 train_set = [seti for i, seti in enumerate(sets) if i in [4, 6, 7]]
 test_set = [seti for i, seti in enumerate(sets) if i in [0, 1, 2, 3, 5]]
-sets = [seti for i, seti in enumerate(sets) if i in range(8)]
+sets = [seti for i, seti in enumerate(sets) if i in [4, 5, 6, 7, 0, 1, 2, 3]] # [4, 5, 6, 7, 0, 1, 2, 3]
 
 ## General configs
 task = 'track'   # 'play' 'det' 'slam' 'track'
-mode = 'predict' # 'train' 'test' 'predict'
-dectector = 'frcnn' # (P1) 'frcnn' 'yolov8'
+mode = 'eval' # 'train' 'eval' 'predict'
+dectector = 'frcnn' # 'frcnn' 'yolov8'
 # TODO: change to the tracker names as defined in the paper
-tracker = 'agt' # 'clean' 'orig' 'ag'  'agt' 
+tracker = 'agt' # 'clean' 'orig' 'ag'  'agt' 'bytetrack'
 device = 0 #  'cpu' cuda:int
 
 ## Det Train YOLO Configs
 yolo_maker = "yolo8n.pt"
-yolo_data = "config/apple_coco.yaml"
+yolo_data = "config/lettuce_coco.yaml" # TBD
 
 ## Det Train FasterRCNN Configs
 anchors = 200
@@ -48,6 +48,8 @@ loftr_cfg['fine_window_size'] = loftr_window
 loftr_cfg['match_coarse']['thr'] = loftr_c_threshold
 loftr_cfg['match_coarse']['border_rm'] = loftr_border_rm
 
+track_metrics_eval = ["MOTA", "HOTA", "DetA", "AssA", "AssRe", "AssPr", "IDF1", "IDR", "IDP"] # ['MOTA', "HOTA", "IDF1"]
+
 cfg = {
     'tracker': tracker,
     'loftr_cfg': loftr_cfg,
@@ -73,4 +75,5 @@ cfg = {
     'weight_decay': weight_decay,
     'step_size': step_size,
     'gamma': gamma,
+    'track_metrics_eval': track_metrics_eval,
 }

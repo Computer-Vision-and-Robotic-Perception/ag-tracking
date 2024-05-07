@@ -7,6 +7,7 @@ import torch
 import kornia
 import numpy as np
 import kornia.feature as KF
+from ultralytics import YOLO
 from .tracktor.slam import SLAM
 import matplotlib.pyplot as plt
 from ..models.frcnn_fpn import FRCNN_FPN
@@ -24,6 +25,25 @@ from config import tracker_orig_config as cfg_orig
 from config import tracker_clean_config as cfg_clean 
 
 np.set_printoptions(precision=3, suppress=True)
+
+def byte_track(cfg, datasets):
+    if cfg['detector'] == 'yolov8': model = YOLO(cfg['yolo_maker'])
+    else: raise ValueError('Invalid detector for ByteTrack tracker')
+    for dataset in datasets:
+        print('\n' * 2 + 'dataset:', dataset.imgdir)
+        os.makedirs(cfg['outdir'] + 'trackers/bytetrack', exist_ok=True)
+        out_file = cfg['outdir'] + 'trackers/bytetrack/' + dataset.imgdir.split('/')[-3] + '.txt'
+        file = open(out_file, 'w')
+        for i, path in tqdm.tqdm(enumerate(dataset.files), desc='Tracking'):
+            results = model.track(source=path, tracker="config/apples_bytetrack.yaml", verbose=False, persist=True)
+            if results[0].boxes.id is None: continue
+            boxes = results[0].boxes.xywh.cpu()
+            track_ids = results[0].boxes.id.int().cpu().tolist()
+            for box, track_id in zip(boxes, track_ids):
+                left = box[0] - box[2] / 2
+                top = box[1] - box[3] / 2
+                file.write('%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n' % (i + 1, track_id, left, top, box[2], box[3], 1, 1, 1, 1))
+        file.close()
 
 def track(cfg, loader, name):
 
@@ -62,13 +82,13 @@ def track(cfg, loader, name):
     if cfg['tracker'] == 'agt': tracker = agt.Tracker(detector, cfg, tracker_cfg)
     if cfg['tracker'] == 'ag': tracker = ag.Tracker(detector, reid_network, tracker_cfg)
 
-    outfile = open(cfg['outdir'] + 'track/' + name + '.txt', 'w')
-    os.makedirs((cfg['outdir'] + 'track/render'), exist_ok=True)
-    os.makedirs((cfg['outdir'] + 'track/times'), exist_ok=True)
+    outfile = open(cfg['outdir'] + 'trackers/%s/%s.txt' % (cfg['tracker'], name), 'w')
+    os.makedirs((cfg['outdir'] + 'trackers/%s/render/' % cfg['tracker']), exist_ok=True)
+    os.makedirs((cfg['outdir'] + 'trackers/%s/times/' % cfg['tracker']), exist_ok=True)
     with torch.no_grad():
         t0, t1 = time.time(), time.time()
         times = []
-        for i, (img, target) in tqdm.tqdm(enumerate(loader)):
+        for i, (img, target) in tqdm.tqdm(enumerate(loader), desc='Tracking'):
             imgT = img[0][None, :, :, :].to(device)
             img = target['img'][0].cpu().numpy()
             B, G, R = img[0, :, :], img[1, :, :], img[2, :, :]
@@ -95,7 +115,7 @@ def track(cfg, loader, name):
     times = np.array(times[2:])
     plt.plot(times)
     plt.title("%3.4f, %3.4f, %3.4f" % (times.min(), times.mean(), times.max()))
-    plt.savefig(cfg['outdir'] + 'track/times/%s.jpg' % name)
+    plt.savefig(cfg['outdir'] + 'trackers/%s/times/%s.jpg' % (cfg['tracker'], name))
     plt.clf()
     print('Times:', times.min(), times.mean(), times.max())
 

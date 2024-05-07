@@ -48,9 +48,10 @@ def create_mot_n_coco_for_sequence(params):
             image_mots_path = '%s/%s' % (mots_images_dir, filename)
             instance_mots_path = '%s/%s' % (mots_instances_dir, filename)
             # Skip if file not found
-            if not os.path.isfile(image_mots_path): continue
-            if not os.path.isfile(instance_mots_path): continue
             if filename.endswith(".jpg") or filename.endswith(".png"):
+                frames += 1
+                if not os.path.isfile(image_mots_path): continue
+                if not os.path.isfile(instance_mots_path): continue
                 # Determine COCO output paths
                 name, ext = filename.split('.')
                 image_coco_path = '%s/%s%s.%s' % (coco_images_dir, params['seq'], name, ext)
@@ -59,7 +60,7 @@ def create_mot_n_coco_for_sequence(params):
                 os.symlink(os.getcwd() + '/' + image_mots_path, image_coco_path)
                 # Count frames
                 with open(label_coco_path, 'w') as label_coco:
-                    frames += 1
+                    
                     img = np.array(Image.open(os.path.join(mots_instances_dir, filename)))
                     obj_ids = np.unique(img)[1:]  # Exclude background
                     mask += len(obj_ids)

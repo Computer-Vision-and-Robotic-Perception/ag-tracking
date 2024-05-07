@@ -11,23 +11,23 @@ test_set = [seti for i, seti in enumerate(sets) if i in range(6, 12)]
 sets = [seti for i, seti in enumerate(sets) if i in range(12)]
 
 ## General configs
-task = 'det'   # 'play' 'det' 'slam' 'track'
-mode = 'test' # 'train' 'test' 'predict'
-dectector = 'frcnn' # 'frcnn' 'yolov8'
+task = 'track'   # 'play' 'det' 'slam' 'track'
+mode = 'eval' # 'train' 'eval' 'predict'
+dectector = 'yolov8' # 'frcnn' 'yolov8'
 # TODO: change to the tracker names as defined in the paper
-tracker = 'agt' # 'clean' 'orig' 'ag'  'agt' 
+tracker = 'bytetrack' # 'clean' 'orig' 'ag'  'agt' 'bytetrack'
 device = 0 #  'cpu' cuda:int
 
 ## Det Train YOLO Configs
-yolo_maker = "output/AppleMOTS/COCO/detect/train/weights/best.pt" # "output/AppleMOTS/COCO/detect/train/weights/best.pt" # "yolov8n.pt"
-yolo_data = "config/apple_coco.yaml"
+yolo_maker = "output/AppleMOTS/COCO/detect/train4/weights/best.pt" # "yolov8n.pt"
+yolo_data = "config/apples_coco.yaml"
 
 ## Det Train FasterRCNN Configs
 anchors = 200
 num_workers = 8
 epoch_start = 0
 checkpoint = "output/AppleMOTS/MOT/det/frcnn/train/24.04.15.12.00/ResNet50FPN_weights/model_epoch_200.pt"
-epochs = 10
+epochs = 50
 batch_size = 16
 backbone = 'ResNet50FPN' # 'ResNet50FPN' 'ResNet101FPN'
 # optimizer
@@ -47,6 +47,8 @@ loftr_border_rm = 2      # default: 2
 loftr_cfg['fine_window_size'] = loftr_window
 loftr_cfg['match_coarse']['thr'] = loftr_c_threshold
 loftr_cfg['match_coarse']['border_rm'] = loftr_border_rm
+
+track_metrics_eval =  ["MOTA", "HOTA", "DetA", "AssA", "AssRe", "AssPr", "IDF1", "IDR", "IDP"] # ['MOTA', "HOTA", "IDF1"]
 
 cfg = {
     'tracker': tracker,
@@ -73,4 +75,5 @@ cfg = {
     'weight_decay': weight_decay,
     'step_size': step_size,
     'gamma': gamma,
+    'track_metrics_eval': track_metrics_eval,
 }

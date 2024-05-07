@@ -50,7 +50,7 @@ class FrcnnTrainer():
                 evaluate(self.model, self.loader, self.device) # This evaluates in the training set
             sys.stdout.flush()
 
-    def test(self):
+    def eval(self):
         if self.cfg['checkpoint']:
             print("Using checkpoint:", self.cfg['checkpoint'])
         else:
