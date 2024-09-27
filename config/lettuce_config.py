@@ -20,7 +20,7 @@ device = 0 #  'cpu' cuda:int
 
 ## Det Train YOLO Configs
 yolo_maker = "yolo8n.pt"
-yolo_data = "config/lettuce_coco.yaml" # TBD
+yolo_data = "config/lettuce_coco.yaml" # TBD # "yolov8n.pt"
 
 ## Det Train FasterRCNN Configs
 anchors = 200

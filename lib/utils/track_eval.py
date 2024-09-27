@@ -33,9 +33,7 @@ def sequence_data_table(res):
             for _, classvalues in seqvalues.items(): # obj-class
                 for _, metrictypevalues in classvalues.items():
                     for metricname, metricvalue in metrictypevalues.items():
-                        value = -1
-                        if isinstance(metricvalue, np.ndarray): value = metricvalue[9]
-                        else: value = metricvalue
+                        value = np.mean(metricvalue)
                         table_by_tracker, table_by_sequence = \
                             populate_seq_track( table_by_tracker, 
                                                 table_by_sequence, 

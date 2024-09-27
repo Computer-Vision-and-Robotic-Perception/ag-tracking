@@ -8,7 +8,7 @@ outdir = 'output/AppleMOTS/'
 sets = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0010', '0011', '0012']
 train_set = [seti for i, seti in enumerate(sets) if i in range(6)]
 test_set = [seti for i, seti in enumerate(sets) if i in range(6, 12)]
-sets = [seti for i, seti in enumerate(sets) if i in range(12)]
+sets = test_set # [seti for i, seti in enumerate(sets) if i in range(12)]
 
 ## General configs
 task = 'track'   # 'play' 'det' 'slam' 'track'
