@@ -83,8 +83,9 @@ def track(cfg, loader, name):
     if cfg['tracker'] == 'ag': tracker = ag.Tracker(detector, reid_network, tracker_cfg)
 
     outfile = open(cfg['outdir'] + 'trackers/%s/%s.txt' % (cfg['tracker'], name), 'w')
-    os.makedirs((cfg['outdir'] + 'trackers/%s/render/' % cfg['tracker']), exist_ok=True)
+    os.makedirs((cfg['outdir'] + 'trackers/%s/render/%s' % (cfg['tracker'], name)), exist_ok=True)
     os.makedirs((cfg['outdir'] + 'trackers/%s/times/' % cfg['tracker']), exist_ok=True)
+    # print(cfg['outdir'] + 'trackers/%s/render/%s' % (cfg['tracker'], name))
     with torch.no_grad():
         t0, t1 = time.time(), time.time()
         times = []
@@ -102,11 +103,11 @@ def track(cfg, loader, name):
                         x1, y1, x2, y2, conf = results[track][frame]
                         x1, y1, x2, y2 = int(x1), int (y1), int(x2), int(y2)
                         outfile.write('%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n' % (i + 1, track, x1, y1, x2 - x1, y2 - y1, conf, 1, 1, 1))
-            #             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 1), 3)
-            #             cv2.putText(img, str(track), (x1, y2 - 10), cv2.FONT_HERSHEY_SIMPLEX, 3, (1, 0, 0), 3)
+            #            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 1), 3)
+            #            cv2.putText(img, str(track), (x1, y2 - 10), cv2.FONT_HERSHEY_SIMPLEX, 3, (1, 0, 0), 3)
             # cv2.imshow('result', np.transpose(img, (1, 0, 2)))
             # cv2.imshow('result', img)
-            # if i%1 == 0: cv2.imwrite(cfg['outdir'] + 'track/render/%d.jpg' % (i + 1), (img * 255).astype(np.uint8))
+            # if i%1 == 0: cv2.imwrite(cfg['outdir'] + 'trackers/%s/render/%s/%06d.jpg' % (cfg['tracker'], name, i + 1), (img * 255).astype(np.uint8))
             # cv2.waitKey(0)
             t1 = time.time()
             times.append(t1 - t0)
